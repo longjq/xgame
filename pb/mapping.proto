@@ -1,0 +1,21 @@
+syntax = "proto2";
+
+package pb;
+
+import "access.proto";
+import "common.proto";
+
+message Mapping {
+    extensions 1 to max;
+};
+
+extend Mapping{
+    // optional TestReq test_req = 1010;
+    // optional TestResp test_resp = 1011;
+    optional LoginReq login_req = 1;
+    optional LoginResp login_resp = 2;
+    optional ConnectGameServerReq connect_game_server_req = 40;
+    optional ConnectGameServerResp connect_game_server_resp = 41;
+    optional QuitGameServerReq quit_game_server_req = 110;
+    optional NotificationEvent notification_event = 1100;
+}

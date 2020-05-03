@@ -1,0 +1,128 @@
+package config
+
+import (
+	"fmt"
+	"os"
+	"gopkg.in/ini.v1"
+	"strings"
+)
+
+type SystemConfig struct{
+	conf *ini.File
+	Servers []*ServerConfig
+	Services map[string][]*ServiceConfig
+	MySelf *ServerConfig
+	ServerMaxSize int
+
+	MsgBuffChanLen int
+
+	MySelfName string
+}
+
+func (self *SystemConfig) parse(){
+	srvNames := self.conf.Section("system").Key("servers").Strings(" ")
+	for _,srvName := range srvNames{
+		srvConf := NewServerConfig(
+			srvName, 
+			self.conf.Section(srvName).Key("ip").String(),
+			self.conf.Section(srvName).Key("port").MustInt(),
+			self.conf.Section(srvName).KeysHash(),
+		)
+	
+		self.Servers = append(self.Servers, srvConf)
+		// fmt.Println("@@@@@@@@@@@@@@",self.Servers)
+		self.parseServer(srvConf)
+		if srvName == self.MySelfName {
+			self.MySelf = srvConf
+		}
+	}
+}
+
+func (self *SystemConfig) parseServer(srvConf *ServerConfig){
+	svcNames := self.conf.Section(srvConf.Name).Key("services").Strings(" ")
+	for _, svcName := range svcNames {
+		svcName = strings.TrimSpace(svcName)
+		if svcName == "" {
+			continue
+		}
+
+		svcId, err := self.conf.Section(svcName).Key("id").Int()
+		if err != nil {
+			fmt.Println(fmt.Sprintf("Load Service %s ServiceId Error：%s",svcName,err))
+			os.Exit(-1)
+		}
+
+		svcConf := NewServiceConfig(
+			srvConf,
+			int32(svcId),
+			svcName,
+			self.conf.Section(svcName).KeysHash(),
+		)
+
+		srvConf.AddService(svcConf)
+		// // fmt.Println(svcName, svcConf)
+		// self.Services[svcName] = append(self.Service[svcName], svcConf)
+		if self.Services[svcName] == nil {
+			self.Services[svcName] = make([]*ServiceConfig, 0)
+			self.Services[svcName] = append(self.Services[svcName], svcConf)
+		}else{
+			self.Services[svcName] = append(self.Services[svcName], svcConf)
+		}
+
+	}
+}
+
+func NewSystemConfig(conf *ini.File, mySelfName string) *SystemConfig {
+	sc := &SystemConfig{
+		conf: conf,
+		MySelfName: mySelfName, 
+		Services: make(map[string][]*ServiceConfig),
+	}
+
+	sc.parse()
+
+	return sc
+}
+
+
+
+type ServerConfig struct{
+	Name string
+	Port int
+	IP string
+
+	Services map[int32]*ServiceConfig
+
+	Options map[string]string
+}
+
+func (sc *ServerConfig) AddService(svc *ServiceConfig)  {
+	sc.Services[svc.Id] = svc
+}
+
+func NewServerConfig(name string, ip string, port int, options map[string]string) *ServerConfig{
+	return &ServerConfig{
+		Name: name,
+		IP: ip,
+		Port: port,
+		Services: make(map[int32]*ServiceConfig),
+		Options: options,
+	}
+}
+
+
+type ServiceConfig struct{
+	Host *ServerConfig
+	Id      int32
+	Name    string
+	Options map[string]string
+}
+
+func NewServiceConfig(host *ServerConfig, id int32, serviceName string, options map[string]string) *ServiceConfig {
+	return &ServiceConfig{
+		Host: host,
+		Id: id,
+		Name: serviceName,
+		Options: options,
+	}
+}

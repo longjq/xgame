@@ -1,0 +1,54 @@
+title = "服务器配置"
+
+# 服务配置
+[[servers]]
+  name = "server1"
+  ip = "localhost"  
+  port = 10013
+  [[servers.services]]
+    id = 10
+    name = "accesswsservice"
+    access_server_ip = "localhost"
+    access_server_port = 8700
+  [[servers.services]]
+    id = 20
+    name = "indexservice"
+[[servers]]
+  name = "server2"
+  ip = "localhost"  
+  port = 10013
+  [[servers.services]]
+    id = 30
+    name = "roomservice"
+  [[servers.services]]
+    id = 40
+    name = "hallservice"
+
+# Redis数据库配置
+# host:port[,db,pass?maxIdle=x&maxActive=x&idleTimeout=x&maxConnLifetime=x]
+[redis]
+    disk  = "127.0.0.1:6379,0,Long1990"
+    cache = "127.0.0.1:6379,1,Long1990"
+
+# MySQL数据库配置
+[database]
+    [[database.default]]
+        host     = "127.0.0.1"
+        port     = "3306"
+        user     = "root"
+        pass     = "root"
+        name     = "xgame"
+        type     = "mysql"
+        role     = "master"
+        charset  = "utf8"
+        priority = "1"
+    [[database.user]]
+        host     = "127.0.0.1"
+        port     = "3306"
+        user     = "root"
+        pass     = "root"
+        name     = "demo"
+        type     = "mysql"
+        role     = "master"
+        charset  = "utf8"
+        priority = "1"
