@@ -1,7 +1,7 @@
 package network
 
 import (
-	"reflect"
+	// "reflect"
 	// "errors"
 
 	"github.com/golang/protobuf/proto"
@@ -19,15 +19,47 @@ var Mapping map[int32]*MessageDef
 
 func init(){
 	if Mapping == nil {
-		Mapping = make(map[int32]*MessageDef)
+		// Mapping = make(map[int32]*MessageDef)
 
-		ext := proto.RegisteredExtensions((*pb.Mapping)(nil))
-		for key, val := range ext {
-			Mapping[key] = &MessageDef{
+		// ext := proto.RegisteredExtensions((*pb.Mapping)(nil))
+		// for key, val := range ext {
+		// 	Mapping[key] = &MessageDef{
+		// 		Service: nil,
+		// 		MsgId: key,
+		// 		MsgCls: val.ExtensionType,
+		// 	}
+		// }
+		Mapping = map[int32]*MessageDef{
+			pb.LoginReq_DEF_value["ID"]: &MessageDef{
 				Service: nil,
-				MsgId: key,
-				MsgCls: reflect.TypeOf(val.ExtensionType),
-			}
+				MsgId: pb.LoginReq_DEF_value["ID"],
+				MsgCls: new(pb.LoginReq),
+			},
+			pb.LoginResp_DEF_value["ID"]: &MessageDef{
+				Service: nil,
+				MsgId: pb.LoginResp_DEF_value["ID"],
+				MsgCls: new(pb.LoginResp),
+			},
+			pb.ConnectGameServerReq_DEF_value["ID"]: &MessageDef{
+				Service: nil,
+				MsgId: pb.ConnectGameServerReq_DEF_value["ID"],
+				MsgCls: new(pb.ConnectGameServerReq),
+			},
+			pb.ConnectGameServerResp_DEF_value["ID"]: &MessageDef{
+				Service: nil,
+				MsgId: pb.ConnectGameServerResp_DEF_value["ID"],
+				MsgCls: new(pb.ConnectGameServerResp),
+			},
+			pb.QuitGameServerReq_DEF_value["ID"]: &MessageDef{
+				Service: nil,
+				MsgId: pb.QuitGameServerReq_DEF_value["ID"],
+				MsgCls: new(pb.QuitGameServerReq),
+			},
+			pb.NotificationEvent_DEF_value["ID"]: &MessageDef{
+				Service: nil,
+				MsgId: pb.NotificationEvent_DEF_value["ID"],
+				MsgCls: new(pb.NotificationEvent),
+			},
 		}
 	}
 }
@@ -35,12 +67,18 @@ func init(){
 type MessageDef struct{
 	Service iface.IService
 	MsgId int32
-	MsgCls reflect.Type
+	// MsgCls reflect.Type
+	MsgCls proto.Message
 }
 
-func GetMessageClass(cmd int32) interface{}{
+// func GetMessageClass(cmd int32) interface{}{
+// 	msgDef := GetMessageDef(cmd)
+// 	return reflect.New(msgDef.MsgCls.Elem()).Interface()
+// }
+
+func GetMessageClass(cmd int32) proto.Message{
 	msgDef := GetMessageDef(cmd)
-	return reflect.New(msgDef.MsgCls.Elem()).Interface()
+	return msgDef.MsgCls
 }
 
 func SetMessageHandler(cmd int32, service iface.IService)  {
@@ -55,62 +93,3 @@ func SetMessageHandler(cmd int32, service iface.IService)  {
 func GetMessageDef(cmd int32) *MessageDef{
 	return Mapping[cmd]
 }
-
-
-// access
-// func GetHeader(buf []byte, bufSize int, start int) *Header{
-// 	if bufSize < (SIZEOF_HEADER + start) {
-// 		return nil
-// 	}
-
-// 	header, err := NewHeader(0,0,0,0,0,0,nil).Decode(buf)
-// 	if err != nil {
-// 		fmt.Println("decode header error", err)
-// 		return nil
-// 	}
-// 	return header
-// }
-
-// func GetRequest(raw *AccessRawMessage) (cm *ClientMessage, idx int){
-// 	if raw.Header == nil {
-// 		raw.Header = GetHeader(raw.Data, len(raw.Data), 0)
-// 	}
-// 	fmt.Println(raw.Header)
-
-// 	// fmt.Println("解包All---->",raw.Data)
-// 	// fmt.Println("解包Body---->",raw.Data[24:])
-// 	// // var umData pb.LoginReq
-
-// 	// m1 := pb.LoginReq{}
-// 	// m1.Mobile = proto.String("13480879974")
-// 	// fmt.Println(m1)
-
-// 	// umData := &pb.LoginReq{}
-// 	requestType := GetMessageClass(raw.Header.Command)
-	
-// 	// fmt.Println("--->",requestType.(proto.Message))
-// 	fmt.Println("----->",Mapping[raw.Header.Command].MsgCls)
-// 	// aa := Mapping[raw.Header.Command]
-	
-// 	t := Mapping[raw.Header.Command].MsgCls
-// 	fmt.Println("---->",t)
-// 	err := proto.Unmarshal(raw.Data[24:], requestType.(proto.Message))
-// 	if err != nil {
-// 		fmt.Println("---->",err)
-// 	}
-// 	// a := reflect.TypeOf(requestType)
-// 	fmt.Println(requestType)
-// //   a := requestType.(aa.MsgCls)
-// 	// fmt.Println(requestType.(aa.Elem()).GetToken())
-// 	// fmt.Println(*umData.Token)
-// 	// // fmt.Println(requestType.MsgCls)
-// 	// // request := GetClientMessage()
-// 	// // request.Body = requestType()
-
-// 	return cm,100
-// }
-
-// func GetClientMessage() *ClientMessage{
-// 	return NewClientMessage()
-// }
-

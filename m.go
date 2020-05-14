@@ -6,8 +6,8 @@ import (
 	// "reflect"
 	// "xgame/message"
 	// "xgame/example"
-	// "xgame/pb"
-	"xgame/config"
+	"xgame/pb"
+	// "xgame/config"
 	// "github.com/golang/protobuf/proto"
 
 	// "github.com/gogf/gf/util/gconv"
@@ -27,8 +27,9 @@ import (
 // }
 
 func main(){
-	conf := config.NewSystemConfig("server1")
-	fmt.Println(conf)
+	fmt.Println(pb.LoginReq_DEF_value["ID"])
+	// conf := config.NewSystemConfig("server1")
+	// fmt.Println(conf)
 	// fmt.Println( grand.N(0,3))
 
 
