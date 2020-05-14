@@ -11,6 +11,8 @@ import (
 	"xgame/network"
 	"xgame/pb"
 	"github.com/golang/protobuf/proto"
+	"github.com/gogf/gf/frame/g"
+
 )
 
 const (
@@ -156,17 +158,20 @@ func (self *AccessWSClientConnection) onMessage(raw *AccessWSRawMessage)  {
 			self.Stop()
 		}else{
 			// 没有连接过，进行连接业务操作
+			fmt.Println("没有连接过，进行连接业务操作")
 			self.connectServer(raw)
 		}
 		return
 	}else{
 		// 已经连接过了，重新连接
 		if raw.Header.Command == CONNECT_GAME_SERVER_REQ_ID {
+			fmt.Println("已经连接过了，重新连接")
 			self.connectServer(raw)
 			return
 		}
 	}
 	// 进行安全的消息处理
+	fmt.Println("进行安全的消息处理")
 	result := self.onSafeMessage(raw)
 
 	// 消息处理结果判断
@@ -177,8 +182,11 @@ func (self *AccessWSClientConnection) onMessage(raw *AccessWSRawMessage)  {
 }
 
 func (self *AccessWSClientConnection) connectServer(raw *AccessWSRawMessage) {
+	conn := g.Redis().Conn()
+	defer conn.Close()
+
 	sUser := gconv.String(raw.Header.User)
-	if session ,err := self.wsserver.Rds.HGet("sessions", sUser).Result(); err != nil{
+	if session ,err := conn.DoVar("HGET","sessions", sUser); err != nil{
 		fmt.Println(fmt.Sprintf("鉴权失败：在Redis中找不到指定User[%s]的Session值,%s", sUser,err))
 		// 鉴权失败
 		goto errSessionGOTO
@@ -188,16 +196,16 @@ func (self *AccessWSClientConnection) connectServer(raw *AccessWSRawMessage) {
 		// request, idx := network.GetRequest(raw.Data, len(raw.Data), 0)
 		// 进行连接时的鉴权操作，必须先去登陆服中进行登陆，种session值
 		if connectGameServerReq, ok := request.IBody.(*pb.ConnectGameServerReq); ok {
-			if (connectGameServerReq.GetSession() == session) {
+			if (connectGameServerReq.GetSession() == session.String()) {
 				self.heartbeatTime = int64(time.Now().Unix())
 				self.isSafe = true
 				self.User = request.Header.User
 				self.loginTime = self.heartbeatTime
-				self.session = session
+				self.session = session.String()
 
 				// 验证是否重复登陆
 				// 查找用户上次映射记录
-				sOldServerId, err := self.wsserver.Rds.HGet("mapping", sUser).Result()
+				sOldServerId, err := conn.Do("hget","mapping", sUser)
 				if err != nil{
 					fmt.Println("找不到上次mapping映射的oldServerId",sOldServerId,"==")
 				}
@@ -232,8 +240,10 @@ func (self *AccessWSClientConnection) connectServer(raw *AccessWSRawMessage) {
 
 				// 设置当前连接信息
 				self.wsserver.Users[request.Header.User] = self
-				self.wsserver.Rds.HSet("server:"+gconv.String(self.wsserver.ServerId), request.Header.User, self.ConnectionId)
-				self.wsserver.Rds.HSet("mapping", sUser, self.wsserver.ServerId)
+				// self.wsserver.Rds.HSet("server:"+gconv.String(self.wsserver.ServerId), request.Header.User, self.ConnectionId)
+				g.Redis().Do("HSet", "server:"+gconv.String(self.wsserver.ServerId), request.Header.User, self.ConnectionId)
+				// self.wsserver.Rds.HSet("mapping", sUser, self.wsserver.ServerId)
+				g.Redis().Do("HSet", sUser, self.wsserver.ServerId)
 
 				// 转发消息
 				ac := self.wsserver.Service.(*AccessWSService)

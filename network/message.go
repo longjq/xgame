@@ -250,7 +250,7 @@ func CreateClientMessage(msgBody interface{}, cmd int32, user int32) *ClientMess
 
 func CreateResponse(req *ClientMessage) *ClientMessage{
 	responseType := GetMessageClass(req.Header.Command + 1)
-
+	fmt.Println(responseType)
 	resp := NewClientMessage()
 	resp.IBody = responseType
 	resp.Header = NewHeader(0,0,0,0,0,0)

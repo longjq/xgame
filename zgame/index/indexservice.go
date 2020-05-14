@@ -6,6 +6,8 @@ import (
 	"xgame/iface"
 	"xgame/network"
 	"xgame/pb"
+	"github.com/gogf/gf/database/gdb"
+	// "github.com/gogf/gf/frame/g"
 )
 
 type IndexService struct{
@@ -58,9 +60,14 @@ func (self *IndexService) SetupRoute() {
 	self.RegisteCommand(pb.ConnectGameServerReq_ID, pb.ConnectGameServerResp_ID, self.HandleConnectGameServer)
 }
 
-func (self *IndexService) HandleConnectGameServer(session interface{}, req interface{}, resp interface{}, event iface.IEvent) *network.ClientMessage{
+func (self *IndexService) HandleConnectGameServer(session *gdb.TX, req interface{}, resp interface{}, event iface.IEvent) bool {
+	fmt.Println("握手辣",session,event.GetEventData())
 
-	fmt.Println("握手辣")
-	return nil
+	fmt.Println(session.Table("demo").All())
+	// fmt.Println(session.Table("demo").Insert(g.Map{"name": "john"}))
+	fmt.Println(session.Table("demo").Where("id", 4).Delete())
+	fmt.Println(session.Table("demo").All())
+
+	return false
 }
 

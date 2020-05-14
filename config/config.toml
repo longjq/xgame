@@ -27,7 +27,7 @@ title = "服务器配置"
 # Redis数据库配置
 # host:port[,db,pass?maxIdle=x&maxActive=x&idleTimeout=x&maxConnLifetime=x]
 [redis]
-    disk  = "127.0.0.1:6379,0,Long1990"
+    default  = "127.0.0.1:6379,0,Long1990"
     cache = "127.0.0.1:6379,1,Long1990"
 
 # MySQL数据库配置

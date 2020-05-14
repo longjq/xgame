@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"time"
 	"github.com/gorilla/websocket"
-	rdsClient "github.com/go-redis/redis/v7"
+	// rdsClient "github.com/go-redis/redis/v7"
 
 	"xgame/config"
 	"xgame/iface"
+	"xgame/utils"
+	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/util/gconv"
 	// messagebase "xgame/message"
 
@@ -50,7 +52,7 @@ type AccessWSServer struct{
 
 	Users map[int32]*AccessWSClientConnection                   // 在线用户
 
-	Rds *rdsClient.Client                 // rds 连接
+	// Rds *rdsClient.Client                 // rds 连接
 
 }
 
@@ -65,22 +67,35 @@ func NewAccessWSServer(id int32, conf *config.SystemConf, ip string, port string
 	}
 
 	// 初始化rds连接
-	acc.Rds = rdsClient.NewClient(&rdsClient.Options{
-		Addr:     "172.17.0.4:6379", // use default Addr
-		Password: "Long1990",               // no password set
-		DB:       0,                // use default DB
-	})
+	// acc.Rds = rdsClient.NewClient(&rdsClient.Options{
+	// 	Addr:     g.Cfg().GetString("redis."), // use default Addr
+	// 	Password: "Long1990",               // no password set
+	// 	DB:       0,                // use default DB
+	// })
 
 	// 加载黑名单列表
-	if bu, err := acc.Rds.HGetAll("black_users").Result(); err != nil{
+
+	conn := g.Redis().Conn()
+	defer conn.Close()
+
+	if bu, err := conn.DoVar("HGETALL", "black_users"); err != nil {
 		acc.BlackUsers = nil
 	}else{
-		for userId, expireAt := range bu {
+		for userId, expireAt := range utils.StrToMap(bu.Strings()) {
 			uid := gconv.Int32(userId)
 			eat := gconv.Int64(expireAt)
 			acc.BlackUsers[int32(uid)] = eat
 		}
 	}
+	// if bu, err := acc.Rds.HGetAll("black_users").Result(); err != nil{
+	// 	acc.BlackUsers = nil
+	// }else{
+	// 	for userId, expireAt := range bu {
+	// 		uid := gconv.Int32(userId)
+	// 		eat := gconv.Int64(expireAt)
+	// 		acc.BlackUsers[int32(uid)] = eat
+	// 	}
+	// }
 	
 	// 开启ws服务，暂只支持ws
 	go acc.StartWSServer()

@@ -52,6 +52,9 @@ func NewCreateEvent(sid int32, did int32, eventType int32, param1 int32, param2 
 	}
 }
 
+func (self *Event) GetSrcId() int32{
+	return self.SrcId
+}
 func (self *Event) GetEventType() int32{
 	return self.EventType
 }

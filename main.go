@@ -158,7 +158,6 @@ func main(){
 	// // fmt.Printf("%T,%T", a,b)
 	
 	flag.Parse()
-
 	// mySelfName := "server1"
 
 	// 加载配置文件
@@ -182,7 +181,7 @@ func main(){
 	)
 
 	// // 协程运行服务器
-	// go server.Run()
+	go server.Run()
 
 	// 监听退出信号
 	sigs := make(chan os.Signal, 1)

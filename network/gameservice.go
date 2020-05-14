@@ -44,6 +44,6 @@ func (self *GameService) OnEvent(event iface.IEvent){
 		fmt.Println(fmt.Sprintf(" No valid event handler for event:%d", event.GetEventType()))
 		return
 	}else{
-		UserTransaction(event, handler)
+		UserTransaction(self.Server, self.ServiceId, event, handler)
 	}
 }
